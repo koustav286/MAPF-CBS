@@ -76,3 +76,11 @@ def parse_int_list(spec: str) -> List[int]:
         elif part:
             out.append(int(part))
     return out
+
+
+def rel(path: str) -> str:
+    """Path relative to the repo root, with forward slashes (falls back to the absolute path)."""
+    try:
+        return os.path.relpath(path, ROOT).replace(os.sep, "/")
+    except ValueError:
+        return path.replace(os.sep, "/")

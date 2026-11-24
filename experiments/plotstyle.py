@@ -33,3 +33,22 @@ def end_label(ax, x, y, alg) -> None:
     """Direct label at the end of a line, in text ink next to the coloured mark."""
     ax.annotate(LABELS[alg], (x, y), xytext=(5, 0), textcoords="offset points",
                 va="center", fontsize=9, color=TEXT2)
+
+
+def end_labels(ax, points) -> None:
+    """Direct labels for several lines ({alg: (x, y)}), nudged apart so they never overlap:
+    the line ending higher gets its label above, the lower one below."""
+    pts = [(alg, x, y) for alg, (x, y) in points.items() if y == y]  # drop NaN
+    pts.sort(key=lambda t: t[2])
+    n = len(pts)
+    for rank, (alg, x, y) in enumerate(pts):
+        dy = 0 if n == 1 else (-7 if rank == 0 else 7)
+        ax.annotate(LABELS[alg], (x, y), xytext=(5, dy), textcoords="offset points",
+                    va="center", fontsize=9, color=TEXT2)
+
+
+def solid_legend(ax, **kw):
+    leg = ax.legend(**kw)
+    for h in leg.legend_handles:
+        h.set_alpha(1)
+    return leg
