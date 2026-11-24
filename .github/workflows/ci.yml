@@ -1,0 +1,38 @@
+name: tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  pinned:
+    name: pytest (pinned requirements, Python ${{ matrix.python }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.12", "3.13", "3.14"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - run: pip install -r requirements.txt
+      - name: Download Moving AI benchmarks (data-dependent tests skip if this fails)
+        run: python scripts/download_benchmarks.py
+        continue-on-error: true
+      - run: python -m pytest -q
+
+  py310:
+    name: pytest (latest compatible packages, Python 3.10)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+      - run: pip install numpy scipy matplotlib pytest
+      - name: Download Moving AI benchmarks (data-dependent tests skip if this fails)
+        run: python scripts/download_benchmarks.py
+        continue-on-error: true
+      - run: python -m pytest -q
