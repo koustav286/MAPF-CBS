@@ -1,0 +1,84 @@
+[      0s] empty-32-32      k=  2  cbs=100%  pp=100%
+[      0s] random-32-32-10  k=  2  cbs=100%  pp=100%
+[      0s] room-32-32-4     k=  2  cbs=100%  pp=100%
+[      0s] empty-32-32      k=  4  cbs=100%  pp=100%
+[      1s] random-32-32-10  k=  4  cbs=100%  pp=100%
+[      1s] room-32-32-4     k=  4  cbs=100%  pp=100%
+[      1s] empty-32-32      k=  6  cbs=100%  pp=100%
+[      1s] random-32-32-10  k=  6  cbs=100%  pp=100%
+[      1s] room-32-32-4     k=  6  cbs=100%  pp=100%
+[      1s] empty-32-32      k=  8  cbs=100%  pp=90%
+[      1s] empty-32-32      k= 10  cbs=100%  pp=90%
+[      1s] empty-32-32      k= 12  cbs=100%  pp=90%
+[      2s] room-32-32-4     k=  8  cbs=100%  pp=100%
+[     10s] room-32-32-4     k= 10  cbs=100%  pp=100%
+[     61s] random-32-32-10  k=  8  cbs=90%  pp=100%
+[     62s] empty-32-32      k= 14  cbs=90%  pp=90%
+[     70s] room-32-32-4     k= 12  cbs=80%  pp=100%
+[    121s] random-32-32-10  k= 10  cbs=90%  pp=90%
+[    122s] empty-32-32      k= 16  cbs=80%  pp=90%
+[    130s] room-32-32-4     k= 14  cbs=70%  pp=100%
+[    181s] random-32-32-10  k= 12  cbs=80%  pp=80%
+[    182s] empty-32-32      k= 18  cbs=80%  pp=80%
+[    242s] room-32-32-4     k= 16  cbs=50%  pp=90%
+[    243s] random-32-32-10  k= 14  cbs=80%  pp=80%
+[    251s] empty-32-32      k= 20  cbs=70%  pp=80%
+[    311s] room-32-32-4     k= 18  cbs=30%  pp=90%
+[    362s] random-32-32-10  k= 16  cbs=70%  pp=70%
+[    371s] empty-32-32      k= 22  cbs=50%  pp=70%
+[    431s] room-32-32-4     k= 20  cbs=20%  pp=90%
+[    484s] random-32-32-10  k= 18  cbs=60%  pp=70%
+[    524s] empty-32-32      k= 24  cbs=50%  pp=70%
+[    604s] room-32-32-4     k= 22  cbs=10%  pp=80%
+[    610s] random-32-32-10  k= 20  cbs=60%  pp=60%
+[    666s] empty-32-32      k= 26  cbs=40%  pp=60%
+[    731s] room-32-32-4     k= 24  cbs=0%  pp=80%
+[    767s] room-32-32-4     k= 26  pp=70%
+[    769s] room-32-32-4     k= 28  pp=70%
+[    770s] room-32-32-4     k= 30  pp=60%
+[    771s] room-32-32-4     k= 32  pp=60%
+[    772s] room-32-32-4     k= 34  pp=60%
+[    773s] room-32-32-4     k= 36  pp=50%
+[    774s] room-32-32-4     k= 38  pp=40%
+[    776s] room-32-32-4     k= 40  pp=30%
+[    777s] room-32-32-4     k= 42  pp=30%
+[    778s] room-32-32-4     k= 44  pp=10%
+[    780s] room-32-32-4     k= 46  pp=10%
+[    781s] room-32-32-4     k= 48  pp=10%
+[    783s] room-32-32-4     k= 50  pp=10%
+[    784s] room-32-32-4     k= 52  pp=10%
+[    784s] random-32-32-10  k= 22  cbs=60%  pp=60%
+[    785s] room-32-32-4     k= 54  pp=0%
+[    806s] empty-32-32      k= 28  cbs=40%  pp=60%
+[    847s] random-32-32-10  k= 24  cbs=60%  pp=50%
+[    907s] empty-32-32      k= 30  cbs=40%  pp=60%
+[    927s] random-32-32-10  k= 26  cbs=50%  pp=50%
+[    987s] empty-32-32      k= 32  cbs=40%  pp=60%
+[   1029s] random-32-32-10  k= 28  cbs=40%  pp=50%
+[   1090s] empty-32-32      k= 34  cbs=20%  pp=60%
+[   1148s] random-32-32-10  k= 30  cbs=40%  pp=50%
+[   1209s] empty-32-32      k= 36  cbs=20%  pp=50%
+[   1269s] random-32-32-10  k= 32  cbs=20%  pp=50%
+[   1332s] empty-32-32      k= 38  cbs=10%  pp=30%
+[   1409s] random-32-32-10  k= 34  cbs=10%  pp=50%
+[   1472s] empty-32-32      k= 40  cbs=0%  pp=30%
+[   1490s] empty-32-32      k= 42  pp=30%
+[   1491s] empty-32-32      k= 44  pp=30%
+[   1492s] empty-32-32      k= 46  pp=30%
+[   1493s] empty-32-32      k= 48  pp=30%
+[   1494s] empty-32-32      k= 50  pp=30%
+[   1496s] empty-32-32      k= 52  pp=20%
+[   1497s] empty-32-32      k= 54  pp=20%
+[   1498s] empty-32-32      k= 56  pp=20%
+[   1499s] empty-32-32      k= 58  pp=10%
+[   1500s] empty-32-32      k= 60  pp=10%
+[   1501s] empty-32-32      k= 62  pp=0%
+[   1536s] random-32-32-10  k= 36  cbs=10%  pp=40%
+[   1656s] random-32-32-10  k= 38  cbs=10%  pp=30%
+[   1777s] random-32-32-10  k= 40  cbs=0%  pp=30%
+[   1777s] random-32-32-10  k= 42  pp=30%
+[   1777s] random-32-32-10  k= 44  pp=10%
+[   1777s] random-32-32-10  k= 46  pp=10%
+[   1777s] random-32-32-10  k= 48  pp=10%
+[   1778s] random-32-32-10  k= 50  pp=0%
+done: 1350 runs in 1778s -> D:\Working\MAPF\Multi-Agent PathFinding\results\benchmark.csv  (invalid: 0)
