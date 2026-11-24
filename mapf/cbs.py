@@ -76,9 +76,6 @@ def detect_conflicts(paths: Sequence[Sequence[Cell]], forbid_following: bool = T
                     count += 1
                     if first is None:
                         first = ("swap", i, j, prev_pos[i], c, t)
-        if first is not None and first[-1] < t:
-            # keep counting conflicts for the tie-breaker, but the first one is fixed
-            pass
         prev_occ, prev_pos = occ, cur
     return first, count
 
