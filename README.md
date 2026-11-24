@@ -250,6 +250,10 @@ results, run `python scripts/check_reproduction.py --fresh-dir <dir>`. SOC value
 delay row must match exactly. Runtimes, and so which borderline instances finish inside the
 time limit, depend on the machine.
 
+*Checked on 2026-11-25:* a fresh clone followed these steps (download, tests, then a benchmark
+re-run on scenarios 1–3 up to k = 12, then the delay study). The checker reported 105 identical
+SOC values, 0 success flips, 30,600 identical delay rows: `REPRODUCED`.
+
 ## 5. Results
 
 ### Part A: benchmark
