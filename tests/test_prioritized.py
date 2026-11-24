@@ -62,15 +62,15 @@ def test_benchmark_instance_valid():
     from mapf.io import load_instance
 
     solved = 0
-    for scen in range(1, 6):
-        grid, starts, goals = load_instance(DATA, "random-32-32-10", scen, 20)
+    for scen in range(1, 11):
+        grid, starts, goals = load_instance(DATA, "random-32-32-10", scen, 10)
         res = prioritized_planning(grid, starts, goals, time_limit=30)
         if res.success:
             solved += 1
             check(grid, starts, goals, res)
         else:
             assert res.extra["reason"] in ("start_blocked", "no_path")
-    assert solved >= 2
+    assert solved >= 5
 
 
 def test_start_blocked_reason():
