@@ -601,11 +601,19 @@ Summary of `notes/related_work.md`:
 * **Zahrádka et al. (2025)** monitor ADG execution, estimate completion times through the ADG,
   and decide when replanning pays off. They require plans without following conflicts.
 * **Ma et al. (2017)** plan for delay probabilities (MAPF-DP).
+* **Varambally, Li and Koenig (2022)** run bounded-suboptimal ECBS-TA and PP with random
+  restarts under ADG execution in a Gazebo warehouse. They compare MAPF models (rotations,
+  k-robust, continuous time) by lifelong throughput. They allow following moves, inject no
+  controlled random delays and include no optimal planner.
+* **Berndt et al. (2023, switchable ADG)** re-order inter-robot dependencies online with a
+  receding-horizon MILP and report up to 25% shorter route completion times under large
+  delays. **Dunkel (2024)** builds sparser ADGs. **Kottinger et al. (2024)** add the fewest
+  extra delays that keep a disrupted plan safe.
 
-None of the papers read compares SOC-optimal CBS plans with PP plans under ADG execution with
-random delays, so H1 is treated as an open empirical question. The "NSF-hosted study comparing
-MAPF models under ADG execution" named in the project brief was not checked, so this framing
-must be revisited if it addresses H1.
+None of these papers compares SOC-optimal CBS plans with PP plans under ADG execution with
+controlled random delays, so H1 is treated as an open empirical question. Varambally et al.
+are the closest; our result that optimal plans are not more fragile complements their
+throughput study.
 
 ## 7. Limitations
 
@@ -646,4 +654,12 @@ tracking errors and stalls are the kind of delays this study models.
   AAAI 2017.
 * M. Čáp, P. Novák, A. Kleiner, M. Selecký. *Prioritized Planning Algorithms for Trajectory
   Coordination of Multiple Mobile Robots.* IEEE T-ASE 12(3), 2015.
+* S. Varambally, J. Li, S. Koenig. *Which MAPF Model Works Best for Automated Warehousing?*
+  SoCS 2022.
+* A. Berndt, N. van Duijkeren, L. Palmieri, A. Kleiner, T. Keviczky. *Receding Horizon
+  Re-ordering of Multi-Agent Execution Schedules.* arXiv:2312.04190 (IEEE T-RO preprint), 2023.
+* J. Dunkel. *Streamlining the Action Dependency Graph Framework: Two Key Enhancements.*
+  arXiv:2412.01277, 2024.
+* J. Kottinger, T. Geft, S. Almagor, O. Salzman, M. Lahijanian. *Introducing Delays in
+  Multi-Agent Path Finding.* arXiv:2307.11252, 2024.
 * N. Sturtevant. Moving AI Lab MAPF benchmarks. https://movingai.com/benchmarks/mapf/
