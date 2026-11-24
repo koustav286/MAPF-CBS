@@ -35,12 +35,25 @@ def aggregate(rows):
         key = (r["map"], int(r["scen"]), int(r["k"]), r["algorithm"])
         acc[(r["model"], float(r["p"]))][key].append(float(r["degradation"]))
         meta[key] = {"density": float(r["type2_density"]), "k": int(r["k"]), "edges": int(r["type2_edges"]),
+                     "num_actions": int(r["num_actions"]),
                      "plan_hash": r.get("plan_hash", ""), "planned_soc": int(r["planned_soc"]),
                      "exec_soc_p0": int(r["exec_soc_p0"])}
     out = {}
     for mp, d in acc.items():
         out[mp] = {key: dict(meta[key], deg=float(np.mean(v)), n=len(v)) for key, v in d.items()}
     return out, meta
+
+
+def reference_degradation(rec, model, p, burst_len=5):
+    """Degradation if no robot ever waited for another robot.
+
+    A ready robot needs p/(1-p) extra steps per move on average under per-step delays
+    (D*p/(1-p) under bursts of length D). Spread over all moves and divided by the p = 0 executed
+    SOC, this is what independent robots would lose; anything above it comes from robots
+    waiting on each other through Type-2 edges.
+    """
+    per_move = p / (1 - p) * (burst_len if model == "burst" else 1)
+    return rec["num_actions"] * per_move / rec["exec_soc_p0"] if rec["exec_soc_p0"] else 0.0
 
 
 def maps_in(meta):
@@ -69,6 +82,18 @@ def wilcoxon_row(diffs):
         w, pval = float(res.statistic), float(res.pvalue)
     return {"n": n, "median": float(np.median(diffs)), "mean": float(np.mean(diffs)),
             "cbs_worse": float(np.mean(diffs > 0)), "W": w, "p": pval}
+
+
+def holm(pvals):
+    """Holm-Bonferroni adjusted p-values (NaNs are left as NaN)."""
+    idx = [i for i, v in enumerate(pvals) if not math.isnan(v)]
+    order = sorted(idx, key=lambda i: pvals[i])
+    adj = [float("nan")] * len(pvals)
+    running = 0.0
+    for rank, i in enumerate(order):
+        running = max(running, min(1.0, (len(order) - rank) * pvals[i]))
+        adj[i] = running
+    return adj
 
 
 def spearman(x, y):
@@ -141,7 +166,12 @@ def plot_density(agg, model, p, out):
     ax.set_xlabel("Type-2 edges per action (density)")
     ax.set_ylabel(f"mean degradation at p = {p}")
     ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda v, _: f"{v:.0%}"))
-    ps.solid_legend(ax, loc="upper right", markerscale=1.4)
+    ref = p / (1 - p) if model == "per_step" else 5 * p / (1 - p)
+    ax.axhline(ref, color=ps.TEXT2, linewidth=1, linestyle=(0, (4, 3)))
+    ax.annotate(f"no-coupling reference p/(1-p) = {ref:.1%}", (ax.get_xlim()[1], ref), xytext=(-4, -10),
+                textcoords="offset points", ha="right", va="top", fontsize=8, color=ps.TEXT2,
+                bbox=dict(boxstyle="round,pad=0.25", fc=ps.SURFACE, ec="none"))
+    ps.solid_legend(ax, loc="lower right", markerscale=1.4)
     ax.set_title(f"Coupling density vs degradation ({model.replace('_', '-')}, p = {p})", loc="left")
     fig.tight_layout()
     fig.savefig(out, dpi=150)
@@ -169,8 +199,9 @@ def build_summary(agg, meta, header, csv_path):
     L += ["## The plans", "",
           f"- CBS and PP returned the *identical* plan on {same} of {len(pr)} paired instances; there the "
           "CBS-PP difference is pure simulation noise. H1 is reported on all pairs and on pairs whose plans differ.", ""]
-    L += ["| map | pairs | mean k | mean density CBS | mean density PP | mean p=0 exec SOC / planned SOC, CBS | same, PP |",
-          "|---|---:|---:|---:|---:|---:|---:|"]
+    L += ["| map | pairs | mean k | mean density CBS | mean density PP | mean p=0 exec SOC / planned SOC, CBS | same, PP "
+          "| moves / p=0 exec SOC, CBS | same, PP |",
+          "|---|---:|---:|---:|---:|---:|---:|---:|---:|"]
     for m in maps + ["all"]:
         sub = [(key, c, p) for key, c, p in pr if m == "all" or key[0] == m]
         if not sub:
@@ -178,24 +209,31 @@ def build_summary(agg, meta, header, csv_path):
         L.append(f"| {m} | {len(sub)} | {np.mean([key[2] for key, _, _ in sub]):.1f} | "
                  f"{np.mean([c['density'] for _, c, _ in sub]):.3f} | {np.mean([p['density'] for _, _, p in sub]):.3f} | "
                  f"{np.mean([c['exec_soc_p0'] / c['planned_soc'] for _, c, _ in sub]):.4f} | "
-                 f"{np.mean([p['exec_soc_p0'] / p['planned_soc'] for _, _, p in sub]):.4f} |")
-    L.append("")
+                 f"{np.mean([p['exec_soc_p0'] / p['planned_soc'] for _, _, p in sub]):.4f} | "
+                 f"{np.mean([c['num_actions'] / c['exec_soc_p0'] for _, c, _ in sub if c['exec_soc_p0']]):.4f} | "
+                 f"{np.mean([p['num_actions'] / p['exec_soc_p0'] for _, _, p in sub if p['exec_soc_p0']]):.4f} |")
+    L += ["", "p=0 exec SOC / planned SOC = 1 confirms that, without delays, ADG execution reproduces the plan. "
+          "moves / p=0 exec SOC below 1 means the plan contains waits that are needed (a robot waiting for another).", ""]
 
     for model in models:
         p_levels = sorted(p for mo, p in agg if mo == model and p > 0)
         L += [f"## H1 ({model.replace('_', '-')} delays): do CBS plans degrade more than PP plans?", "",
               "Paired Wilcoxon signed-rank test (two-sided) on per-instance mean degradation. "
               "Difference = CBS minus PP; positive means CBS degrades more.", "",
-              "| p | subset | pairs | median diff | mean diff | share CBS worse | W | p-value |",
-              "|---:|---|---:|---:|---:|---:|---:|---:|"]
-        for p in p_levels:
-            prs = pairs_of(agg[(model, p)])
-            for label, sub in (("all pairs", prs),
-                               ("plans differ", [x for x in prs if x[1]["plan_hash"] != x[2]["plan_hash"]])):
-                w = wilcoxon_row([c["deg"] - pp_["deg"] for _, c, pp_ in sub])
-                if w:
-                    L.append(f"| {p} | {label} | {w['n']} | {w['median']:+.4f} | {w['mean']:+.4f} | "
-                             f"{w['cbs_worse']:.1%} | {w['W']:.0f} | {fmt_p(w['p'])} |")
+              "Holm-adjusted p-values correct for the four p levels within each subset.", "",
+              "| p | subset | pairs | median diff | mean diff | share CBS worse | W | p-value | Holm p |",
+              "|---:|---|---:|---:|---:|---:|---:|---:|---:|"]
+        for label in ("all pairs", "plans differ"):
+            ws = []
+            for p in p_levels:
+                prs = pairs_of(agg[(model, p)])
+                if label == "plans differ":
+                    prs = [x for x in prs if x[1]["plan_hash"] != x[2]["plan_hash"]]
+                ws.append((p, wilcoxon_row([c["deg"] - pp_["deg"] for _, c, pp_ in prs])))
+            adj = holm([w["p"] for _, w in ws])
+            for (p, w), a in zip(ws, adj):
+                L.append(f"| {p} | {label} | {w['n']} | {w['median']:+.4f} | {w['mean']:+.4f} | "
+                         f"{w['cbs_worse']:.1%} | {w['W']:.0f} | {fmt_p(w['p'])} | {fmt_p(a)} |")
         L.append("")
         L += [f"Per map, plans differ ({model.replace('_', '-')}):", "",
               "| map | p | pairs | median diff | share CBS worse | p-value |", "|---|---:|---:|---:|---:|---:|"]
@@ -225,6 +263,42 @@ def build_summary(agg, meta, header, csv_path):
                 r4, p4 = partial_spearman(x, y, z)
                 L.append(f"| {p} | {label} | {len(recs)} | {r1:+.3f} | {fmt_p(p1)} | {r2:+.3f} | {fmt_p(p2)} | "
                          f"{r3:+.3f} | {r4:+.3f} | {fmt_p(p4)} |")
+        L.append("")
+
+    for model in models:
+        bl = int(header.get("burst_len", 5) or 5)
+        L += [f"## How much of the slowdown comes from coupling? ({model.replace('_', '-')})", "",
+              "Reference = degradation if no robot ever waited for another "
+              f"({'p/(1-p)' if model == 'per_step' else f'{bl}p/(1-p)'} extra steps per move, over p = 0 executed SOC). "
+              "Excess = degradation minus reference: the part caused by robots waiting on each other. "
+              "Medians over solutions; H1 on the excess uses the same paired Wilcoxon test (plans differ). "
+              "*Exploratory, not the pre-registered H1 metric:* the reference is not a strict bound (waits already in "
+              "a plan can absorb a robot's own delays), and it is lower for plans with more waiting, so differences "
+              "in excess partly reflect how much waiting each plan contains.", "",
+              "| p | reference (median) | CBS degradation | PP degradation | CBS excess | PP excess | "
+              "excess diff CBS-PP (median) | p-value | rho(density, excess) | rho(density, excess \\| k) |",
+              "|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|"]
+        for p in sorted(p for mo, p in agg if mo == model and p > 0):
+            sol = agg[(model, p)]
+            ref = {key: reference_degradation(rec, model, p, bl) for key, rec in sol.items()}
+            exc = {key: rec["deg"] - ref[key] for key, rec in sol.items()}
+
+            def med(vals):
+                return f"{np.median(vals):.2%}" if len(vals) else "-"
+            prs = [x for x in pairs_of(sol) if x[1]["plan_hash"] != x[2]["plan_hash"]]
+            w = wilcoxon_row([exc[(*key, "cbs")] - exc[(*key, "pp")] for key, _, _ in prs])
+            keys = list(sol)
+            x = np.array([sol[kk]["density"] for kk in keys])
+            y = np.array([exc[kk] for kk in keys])
+            z = np.array([sol[kk]["k"] for kk in keys], dtype=float)
+            r1, _ = spearman(x, y)
+            r2, p2 = partial_spearman(x, y, z)
+            L.append(f"| {p} | {med(list(ref.values()))} | "
+                     f"{med([r['deg'] for kk, r in sol.items() if kk[3] == 'cbs'])} | "
+                     f"{med([r['deg'] for kk, r in sol.items() if kk[3] == 'pp'])} | "
+                     f"{med([v for kk, v in exc.items() if kk[3] == 'cbs'])} | "
+                     f"{med([v for kk, v in exc.items() if kk[3] == 'pp'])} | "
+                     f"{w['median']:+.4f} | {fmt_p(w['p'])} | {r1:+.3f} | {r2:+.3f} (p {fmt_p(p2)}) |")
         L.append("")
 
     L += ["## Median degradation by map and p (per-step)", "",

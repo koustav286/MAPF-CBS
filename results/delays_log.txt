@@ -1,0 +1,13 @@
+268 paired instances, 536 solutions, models=['per_step', 'burst'], R=30
+[     4s] 50/536 solutions
+[     6s] 100/536 solutions
+[     9s] 150/536 solutions
+[    12s] 200/536 solutions
+[    15s] 250/536 solutions
+[    18s] 300/536 solutions
+[    22s] 350/536 solutions
+[    24s] 400/536 solutions
+[    26s] 450/536 solutions
+[    28s] 500/536 solutions
+[    30s] 536/536 solutions
+wrote 160800 rows to D:\Working\MAPF\Multi-Agent PathFinding\results\delays.csv in 31s (all traces passed the checker)

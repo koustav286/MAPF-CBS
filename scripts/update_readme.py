@@ -30,14 +30,14 @@ def demote(md: str) -> str:
 def main() -> int:
     path = os.path.join(ROOT, "README.md")
     text = open(path, encoding="utf-8").read()
-    pat = re.compile(r"(<!-- BEGIN (\S+) -->\n)(.*?)(\n<!-- END \2 -->)", re.S)
+    pat = re.compile(r"(<!-- BEGIN (\S+) -->\n)(.*?)(<!-- END \2 -->)", re.S)
 
     def repl(m):
         src = os.path.join(ROOT, m.group(2))
         if not os.path.exists(src):
             print(f"warning: {m.group(2)} missing, block left unchanged", file=sys.stderr)
             return m.group(0)
-        return m.group(1) + demote(open(src, encoding="utf-8").read()) + m.group(4)
+        return m.group(1) + demote(open(src, encoding="utf-8").read()) + "\n" + m.group(4)
 
     new, n = pat.subn(repl, text)
     with open(path, "w", encoding="utf-8") as f:

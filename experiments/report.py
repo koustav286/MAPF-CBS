@@ -31,15 +31,18 @@ def main() -> int:
           f"- Maps: {', '.join(maps)} (Moving AI, random scenarios {bh.get('scens', '?')})",
           f"- Runs: {len(rows)} (CBS and PP, k = 2, 4, ...; {bh.get('time_limit_s', '?')} s limit); "
           f"benchmark wall time {int(bh.get('total_wall_s', 0)) / 60:.0f} min on {bh.get('workers', '?')} workers"
-          + (f"; delay study wall time {int(dh.get('total_wall_s', 0)) / 60:.0f} min" if dh else ""),
+          + (f"; delay study wall time {dh.get('total_wall_s', '?')} s" if dh else ""),
           f"- Invalid solutions: {sum(r['status'] == 'invalid' for r in rows)} (every success passed the validator)", "",
-          "| map | max k at >= 50% success, CBS | same, PP | CBS success (all runs) | PP success (all runs) |",
-          "|---|---:|---:|---:|---:|"]
+          "Success rates are over the k values both algorithms were run at (CBS's range), so they compare like with like.", "",
+          "| map | max k at >= 50% success, CBS | same, PP | k range compared | CBS success | PP success |",
+          "|---|---:|---:|---|---:|---:|"]
     for m in maps:
         c, p = table[(m, "cbs")], table[(m, "pp")]
-        cs = sum(v[0] for v in c.values()) / max(1, sum(v[1] for v in c.values()))
-        ps_ = sum(v[0] for v in p.values()) / max(1, sum(v[1] for v in p.values()))
-        L.append(f"| {m} | {A.max_k_at(table, m, 'cbs')} | {A.max_k_at(table, m, 'pp')} | {cs:.1%} | {ps_:.1%} |")
+        both = sorted(set(c) & set(p))
+        cs = sum(c[k][0] for k in both) / max(1, sum(c[k][1] for k in both))
+        ps_ = sum(p[k][0] for k in both) / max(1, sum(p[k][1] for k in both))
+        L.append(f"| {m} | {A.max_k_at(table, m, 'cbs')} | {A.max_k_at(table, m, 'pp')} | {both[0]}-{both[-1]} | "
+                 f"{cs:.1%} | {ps_:.1%} |")
     ratios = [v["pp"]["soc"] / v["cbs"]["soc"] for v in pairs.values() if v["cbs"]["soc"]]
     L += ["", f"- On the {len(ratios)} instances both solve, PP SOC / CBS SOC: mean {mean(ratios):.4f}, "
           f"max {max(ratios):.4f}; PP is suboptimal on {sum(r > 1 for r in ratios) / len(ratios):.1%} of them.", ""]
@@ -55,14 +58,17 @@ def main() -> int:
             if not p_levels:
                 continue
             L += [f"### H1, {model.replace('_', '-')} delays (CBS minus PP degradation; Wilcoxon signed-rank)", "",
-                  "| p | pairs (plans differ) | median diff | share CBS worse | p-value | pairs (all) | median diff | p-value |",
-                  "|---:|---:|---:|---:|---:|---:|---:|---:|"]
+                  "| p | pairs (plans differ) | median diff | share CBS worse | p-value | Holm p | pairs (all) | median diff | Holm p |",
+                  "|---:|---:|---:|---:|---:|---:|---:|---:|---:|"]
+            WA, WD = [], []
             for p in p_levels:
                 prs = D.pairs_of(agg[(model, p)])
-                wa = D.wilcoxon_row([c["deg"] - q["deg"] for _, c, q in prs])
-                wd = D.wilcoxon_row([c["deg"] - q["deg"] for _, c, q in prs if c["plan_hash"] != q["plan_hash"]])
+                WA.append(D.wilcoxon_row([c["deg"] - q["deg"] for _, c, q in prs]))
+                WD.append(D.wilcoxon_row([c["deg"] - q["deg"] for _, c, q in prs if c["plan_hash"] != q["plan_hash"]]))
+            ha, hd = D.holm([w["p"] for w in WA]), D.holm([w["p"] for w in WD])
+            for p, wa, wd, a, d in zip(p_levels, WA, WD, ha, hd):
                 L.append(f"| {p} | {wd['n']} | {wd['median']:+.4f} | {wd['cbs_worse']:.1%} | {D.fmt_p(wd['p'])} | "
-                         f"{wa['n']} | {wa['median']:+.4f} | {D.fmt_p(wa['p'])} |")
+                         f"{D.fmt_p(d)} | {wa['n']} | {wa['median']:+.4f} | {D.fmt_p(a)} |")
             L += ["", f"### H2, {model.replace('_', '-')} delays (Spearman over all solutions)", "",
                   "| p | rho(density, deg) | p-value | rho(k, deg) | rho(density, deg \\| k) | p-value |",
                   "|---:|---:|---:|---:|---:|---:|"]
